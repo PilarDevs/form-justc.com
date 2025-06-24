@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <link rel="stylesheet" href="css/style.css">
+    <title>Formulario </title>
+</head>
+<body>
+
+<div class="container">
+    <!--<img src="logo.png" alt="Logo de la empresa" class="logo"> -->
+
+    <form action="" method="post">
+        <h3>FORMULARIO DE SOLICITUD DE INSTALACIÓN O REPARACIÓN DE RED</h3>
+        <hr>
+
+        <h1>Datos de ubicacion</h1>
+
+        <h3>Sucursal:</h3>
+        <input type="text" name="" id="" required>
+
+        <h3>Piso / area especifica</h3>
+        <input type="number" name="" id="" required>
+
+        <h3>Persona de contacto en sitio</h3>
+        <input type="text" name="" id="" required placeholder="Nombre / Telefono">
+        <hr>
+
+        <h1>Tipo de servicio requerido</h1>
+            <select name="" id="" multiple>
+                <option value="" disabled>Escoge</option>
+                <option value="">Instalación de nuevo(s) punto(s) de red</option>
+                <option value="">Reparación de punto(s) existente(s)</option>
+                <option value="">Otro (describir)</option>
+            </select>
+            <p class="txt">Use ctrl para multiples selecciones</p>
+
+        <label for="">Describe</label>
+        <input type="text" name="" id="">
+        <hr>
+
+        <h1>Cantidad de puntos</h1>
+
+        <h3>Cantidad de líneas a instalar:</h3>
+        <input type="number" name="" id="" required>
+
+        <h3>Cantidad de lineas a reparar:</h3>
+        <input type="number" name="" id="" required>
+        <hr>
+
+        <h1>Materiales / componentes requeridos (Cables y conectores)</h1>
+
+        <select name="" id="" required multiple>
+            <option value="">Cable UTP Cat6</option>
+            <option value="">Patch cord (RJ45)</option>
+            <option value="">Conector RJ45</option>
+            <option value="">Jack / Mini Jack RJ45</option>
+            <option value="">Faceplate (1, 2, 4 bocas)</option>
+            <option value="">Patch panel</option>
+        </select>
+        <hr>
+
+        <h1>Canalizacion y montaje</h1>
+
+        <h3>Seleccion multiple</h3>
+        <select name="" id="" required multiple>
+            <option value="">Canaleta plástica</option>
+            <option value="">EMT metálico — diámetro:</option>
+            <option value="">Bandeja portacable</option>
+            <option value="">Gabinete / Rack (tipo / tamaño):</option>
+            <option value="">Organizadores de cableado</option>
+        </select>
+
+        <h1>Equipos activos</h1>
+
+        <select name="" id="">
+            <option value="" disabled>Escoje</option>
+            <option value="">Switch</option>
+            <option value="">PDU</option>
+            <option value="">Otros</option>
+        </select>
+        <label for="">Espesificar</label>
+        <input type="text" name="" id="">
+        <hr>
+        <h2>Diagnóstico / Comentario adicional Breve descripción de la situación o necesidad</h2>
+        <input type="text" name="" id="">
+        <hr>
+
+        <h1>Prioridad de la solicitud</h1>
+        <select name="" id="" required>
+            <option value="">Alta (Urgente)</option>
+            <option value="">Media (Planificar proxima visita)</option>
+            <option value="">Baja (Sin urgencia)</option>
+        </select>
+        <hr>
+        <h3>Disponibilidad para la visita Franja horaria preferida / restricciones de horario</h3>
+        <input type="time" name="" id="" required>
+        <hr>
+
+        <h2>Autorización especial / requisitos de seguridad</h2>
+        <ul>
+            <li>Se requiere autorización previa de Seguridad del banco</li>
+            <li>Se requiere acceso a sala técnica / Data Center</li>
+            <li>Se requiere presencia de personal del banco en sitio</li>
+            <li>No se requieren autorizaciones especiales</li>
+        </ul>
+        <hr>
+        <label for="">Nota importante:</label>
+        <p>El cliente seleccionará únicamente la Sucursal. La clasificación por
+           Zona (1 / SD / 2) será realizada por JUSTECH según el mapeo oficial de zonas del contrato.
+           SLA máximo para todas las solicitudes: 4 días calendario. Se aplicará la tarifa
+           correspondiente según contrato vigente.
+        </p>
+    </form>
+</div>
+
+
+
+</body>
+</html>

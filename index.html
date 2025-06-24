@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cargando...</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #000000;
+      font-family: Arial, sans-serif;
+    }
+
+    #img {
+      animation: spin 1.1s linear;
+      width: 10px;
+    }
+    @keyframes spin {
+      from { 
+          width: 10px;
+      }
+      to {
+            width: 200px;
+      }
+    }
+  </style>
+  <script>
+    setTimeout(function(){
+      window.location.href = "form-tecnico.html";
+    }, 1050); // Redirige después de 3 segundos
+  </script>
+</head>
+<body>
+  <div class="loader">
+    <div class="spinner"></div>
+    <img src="img/just-logo.png" alt="" id="img">
+  </div>
+</body>
+</html>

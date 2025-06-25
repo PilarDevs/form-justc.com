@@ -1,136 +1,186 @@
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #f2f2f2;
-        color: #333;
-        margin: 0;
-        padding: 20px;
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 800px;
+    margin: auto;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+#sucursal {
+    position: relative;
+    left: 5rem;
+}
+
+#piso {
+    position: relative;
+    left: 11rem;
+}
+
+#contacto {
+    position: relative;
+    left: 15rem;
+}
+
+.sucursal {
+    position: relative;
+    top: 30px;
+}
+
+.piso, .contacto {
+    position: relative;
+    top: 30px;
+}
+
+.lineasInp {
+    position: relative;
+    left: 14rem;
+}
+
+.repararInp {
+    position: relative;
+    left: 14rem;
+}
+
+.lineas, .reparar {
+    position: relative;
+    top: 34px;
+}
+
+
+
+
+
+
+.oculto {
+  display: none;
+}
+
+.txt {
+    font-size: 9px;
+    margin-top: -20px;
+}
+
+h1, h2, h3 {
+    color: #005792;
+    margin-top: 30px;
+}
+
+label {
+    font-weight: bold;
+    margin-bottom: 4px;
+    display: inline-block;
+    width: auto;
+}
+
+.input-wrapper {
+    margin-bottom: 15px;
+}
+
+.input-wrapper label {
+    display: block;
+    margin-bottom: 6px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="time"],
+select {
+    width: 50%; /* tamaño más pequeño */
+    padding: 8px 10px;
+    margin-top: 4px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+input[type="submit"] {
+    background-color: #005792;
+    color: white;
+    padding: 10px 24rem;
+    border: none;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+input[type="submit"]:hover {
+    transition: 420ms;
+    background-color: #005892c0;
+}
+
+select[multiple] {
+    height: auto;
+    min-height: 100px;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 30px 0;
+}
+
+.logo {
+    max-width: 200px;
+    display: block;
+    margin: 0 auto 30px;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.input-group label {
+    min-width: 180px;
+}
+
+.input-group input,
+.input-group select {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+@media (max-width: 600px) {
+    .input-group {
+        flex-direction: column;
+        align-items: flex-start;
     }
 
     .container {
-        background-color: #fff;
-        padding: 30px;
-        border-radius: 10px;
-        max-width: 800px;
-        margin: auto;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-
-    .txt {
-        font-size: 9px;
-        margin-top: -20px;
-    }
-
-    h1, h2, h3 {
-        color: #005792;
-        margin-top: 30px;
+        padding: 15px;
     }
 
     input[type="text"],
     input[type="number"],
     input[type="time"],
     select {
-        width: 100%;
-        padding: 10px;
-        margin-top: 8px;
-        margin-bottom: 20px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        box-sizing: border-box;
+        font-size: 16px;
+        width: 100%; /* full width en móviles */
     }
 
-    input[type="submit"] {
-        background-color: #005792;
-        color: white;
-        padding: 10px 24rem;
-        border: none;
-        border-radius: 5px;
-        box-sizing: border-box;
+    h1 {
+        font-size: 22px;
     }
 
-    input[type="submit"]:hover {
-        transition: 420ms;
-        background-color: #005892c0;
+    h2 {
+        font-size: 20px;
     }
 
-    select[multiple] {
-        height: auto;
-        min-height: 100px;
+    h3 {
+        font-size: 18px;
     }
-
-    hr {
-        border: none;
-        border-top: 1px solid #ccc;
-        margin: 30px 0;
-    }
-
-    label,
-    p,
-    ul {
-        margin: 10px 0;
-    }
-
-    .logo {
-        max-width: 200px;
-        display: block;
-        margin: 0 auto 30px;
-    }
-
-    .input-group {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-    }
-
-    .input-group h3 {
-        min-width: 180px;
-        margin: 0;
-    }
-
-    .input-group input,
-    .input-group select {
-        flex: 1;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        box-sizing: border-box;
-    }
-
-    /* Responsive para pantallas pequeñas */
-    @media (max-width: 600px) {
-        .input-group {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .input-group h3 {
-            margin-bottom: 5px;
-        }
-    }
-
-
-    @media (max-width: 600px) {
-        .container {
-            padding: 15px;
-        }
-
-        input[type="text"],
-        input[type="number"],
-        input[type="time"],
-        select {
-            font-size: 16px;
-        }
-
-        h1 {
-            font-size: 22px;
-        }
-
-        h2 {
-            font-size: 20px;
-        }
-
-        h3 {
-            font-size: 18px;
-        }
-    }
+}

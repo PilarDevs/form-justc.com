@@ -15,27 +15,6 @@ if (!isset($_SESSION['id_usuario'])) {
   <link rel="icon" href="img/just-logo.png" type="image/x-icon">
   <link rel="stylesheet" href="css/style.css">
   <title>Formulario</title>
-  <style>
-    .oculto {
-      display: none;
-    }
-    .container {
-      padding: 2rem;
-      max-width: 800px;
-      margin: auto;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-    }
-
-    .checkbox-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      margin-top: 10px;
-    }
-  </style>
 </head>
 <body>
 <div class="container">

@@ -1,19 +1,130 @@
 <?php
-require 'protegido/config.php';
-$stmt = $pdo->query("SELECT s.id, u.usuario, s.url_pdf, s.fecha_envio 
-                     FROM solicitudes s
-                     JOIN usuarios u ON s.id_usuario = u.id
-                     ORDER BY s.fecha_envio DESC");
+session_start();
+require_once 'protegido/config.php';
 
-echo "<h2>Solicitudes</h2><table border='1' cellpadding='5'>";
-echo "<tr><th>ID</th><th>Usuario</th><th>PDF</th><th>Fecha</th></tr>";
-
-while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    echo "<tr>
-            <td>{$row['id']}</td>
-            <td>{$row['usuario']}</td>
-            <td><a href='{$row['url_pdf']}' target='_blank'>Ver PDF</a></td>
-            <td>{$row['fecha_envio']}</td>
-          </tr>";
+if (!isset($_SESSION['id_usuario']) || $_SESSION['tipo'] !== 'admin') {
+    header("Location: login.php");
+    exit;
 }
-echo "</table>";
+
+// Consulta con JOIN para traer el nombre del usuario en vez de solo el id_usuario
+$sql = "SELECT s.*, u.nombre 
+        FROM solicitudes s
+        JOIN usuarios u ON s.id_usuario = u.id
+        ORDER BY s.id DESC";
+
+$stmt = $pdo->query($sql);
+$solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ver Solicitudes</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+    th {
+      background-color: #005792;
+      color: white;
+    }
+    td select, td button {
+      padding: 6px 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .btn-guardar {
+      background-color: #28a745;
+      color: white;
+      border: none;
+    }
+    .btn-pdf {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+    }
+    .btn-guardar:hover {
+      background-color: #218838;
+    }
+    .btn-pdf:hover {
+      background-color: #c82333;
+    }
+    @media (max-width: 768px) {
+      table {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h2>Lista de Solicitudes</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Usuario</th>
+      <th>Fecha</th>
+      <th>Estado</th>
+      <th>Actualizar</th>
+      <th>PDF</th>
+    </tr>
+  </thead>
+  <tbody>
+    <?php foreach ($solicitudes as $s): ?>
+    <tr>
+      <td><?= $s['id'] ?></td>
+      <td><?= htmlspecialchars($s['nombre']) ?></td>
+      <td><?= date('d/m/Y', strtotime($s['fecha_envio'])) ?></td>
+      <td>
+        <select id="estatus-<?= $s['id'] ?>">
+          <option value="pendiente" <?= $s['estatus'] === 'pendiente' ? 'selected' : '' ?>>Pendiente</option>
+          <option value="cerrada" <?= $s['estatus'] === 'cerrada' ? 'selected' : '' ?>>Cerrada</option>
+          <option value="completada" <?= $s['estatus'] === 'completada' ? 'selected' : '' ?>>Completada</option>
+        </select>
+      </td>
+      <td>
+        <button class="btn-guardar" onclick="actualizarEstatus(<?= $s['id'] ?>)">Guardar</button>
+      </td>
+      <td>
+        <a href="pdf/generar_pdf.php?id=<?= $s['id'] ?>" target="_blank">
+          <button class="btn-pdf">Indisponible</button>
+        </a>
+      </td>
+    </tr>
+    <?php endforeach; ?>
+  </tbody>
+</table>
+
+<script>
+function actualizarEstatus(id) {
+  const nuevoEstatus = document.getElementById(`estatus-${id}`).value;
+
+  fetch('actualizar-estatus.php', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: `id=${id}&estatus=${nuevoEstatus}`
+  })
+  .then(res => res.text())
+  .then(data => {
+    alert(data.trim());
+  })
+  .catch(err => {
+    alert("Error al actualizar estado");
+    console.error(err);
+  });
+}
+</script>
+
+</body>
+</html>

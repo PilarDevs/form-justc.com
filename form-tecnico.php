@@ -18,7 +18,9 @@ if (!isset($_SESSION['id_usuario'])) {
 </head>
 <body>
 <div class="container">
-  <form action="procesar-formularios.php" method="post">
+  <form action="procesar-formularios.php" method="post" enctype="multipart/form-data">
+    <a href="panel-usuario.php">Ver mis solicitudes</a>
+    <img src="img/Justech-text-logo.png" alt="" style="width: 130px; position: relative; left: 450px; top: 10px;">
     <h3>FORMULARIO DE SOLICITUD DE INSTALACIÓN O REPARACIÓN DE RED</h3>
     <hr>
 
@@ -31,13 +33,7 @@ if (!isset($_SESSION['id_usuario'])) {
 
     <label for="contacto" class="contacto">Persona de contacto en sitio:</label>
     <input type="text" required placeholder="Nombre / Teléfono" name="contacto" id="contacto">
-    <hr>
-
-    <h1>Tipo de servicio requerido</h1>
     <div class="checkbox-group" id="tipo-servicio">
-      <label><input type="checkbox" name="tipo_servicio[]" value="Instalación de nuevos puntos"> Instalación de nuevos puntos</label>
-      <label><input type="checkbox" name="tipo_servicio[]" value="Reparación de puntos existentes"> Reparación de puntos existentes</label>
-      <label><input type="checkbox" name="tipo_servicio[]" value="Otro"> Otro (describir)</label>
     </div>
 
     <div id="campo-describir" class="oculto">
@@ -49,20 +45,28 @@ if (!isset($_SESSION['id_usuario'])) {
       <label for="cantidad_servicio">Cantidad de puntos requeridos:</label>
       <input type="number" name="cantidad_servicio" id="cantidad_servicio" placeholder="Ingrese cantidad total">
     </div>
+          <hr>
+          <h1>Cantidad requeridas</h1>
 
-    <hr>
-    <h1>Cantidad de puntos</h1>
-    <div class="input-wrapper">
-      <label for="lineas_instalar" class="lineas">Cantidad de líneas a instalar:</label>
-      <input type="number" name="lineas_instalar" id="lineas_instalar" placeholder="Líneas a instalar" class="lineasInp">
-    </div>
+          <label>
+            <input type="checkbox" id="chk_puntos_instalar" name="chk_puntos_instalar">
+            Cantidad de puntos de red a instalar
+          </label>
+          <input type="number" name="cantidad_puntos_instalar" id="cantidad_puntos_instalar" class="oculto" placeholder="Ingrese cantidad a instalar" min="0">
 
-    <div class="input-wrapper">
-      <label for="lineas_reparar" class="reparar">Cantidad de líneas a reparar:</label>
-      <input type="number" name="lineas_reparar" id="lineas_reparar" placeholder="Líneas a reparar" class="repararInp">
-    </div>
+          <label>
+            <input type="checkbox" id="chk_puntos_reparar" name="chk_puntos_reparar">
+            Cantidad de puntos de red a reparar
+          </label>
+          <input type="number" name="cantidad_puntos_reparar" id="cantidad_puntos_reparar" class="oculto" placeholder="Ingrese cantidad a reparar" min="0">
+          <label>
+          <input type="checkbox" id="chk_puntos_otros" name="chk_puntos_otros">
+          Otros
+        </label>
+        <input type="text" id="cantidad_puntos_otros" name="cantidad_puntos_otros" class="oculto" placeholder="Especifique otro requerimiento">
 
-    <hr>
+          <hr>
+
     <h1>Materiales / componentes requeridos</h1>
     <div class="checkbox-group" id="materiales">
 
@@ -117,61 +121,94 @@ if (!isset($_SESSION['id_usuario'])) {
         <input type="number" name="detalle_Patch_panel_visible" id="detalle_Patch_panel_visible" placeholder="Unidades">
       </div>
 
-      <label>
-        <input type="checkbox" name="materiales[]" value="Faceplate">
-        Faceplate
-      </label>
-      <input type="hidden" name="faceplate_bocas" value="">
-      <input type="hidden" name="faceplate_cantidad" value="">
-      <div id="campo-faceplate" class="oculto">
-        <label for="faceplate_bocas_visible">Bocas:</label>
-        <select name="faceplate_bocas_visible" id="faceplate_bocas_visible">
-          <option disabled selected>Seleccione bocas</option>
-          <option>1</option>
-          <option>2</option>
-          <option>4</option>
-        </select>
-        <label for="faceplate_cantidad_visible">Cantidad de faceplates:</label>
-        <input type="number" name="faceplate_cantidad_visible" id="faceplate_cantidad_visible" placeholder="Cantidad requerida">
-      </div>
+                <label>
+                  <input type="checkbox" name="materiales[]" value="Faceplate">
+                  Faceplate
+                </label>
+
+                <input type="hidden" name="faceplate_bocas" value="">
+                <input type="hidden" name="faceplate_cantidad" value="">
+
+          <div id="campo-faceplate" class="oculto">
+            <label>Bocas:</label>
+            <div>
+              <label><input type="checkbox" name="faceplate_bocas_visible[]" value="1"> 1</label>
+              <input type="number" name="faceplate_1_cantidad" placeholder="Cantidad requerida">
+            </div>
+            <div>
+              <label><input type="checkbox" name="faceplate_bocas_visible[]" value="2"> 2</label>
+              <input type="number" name="faceplate_2_cantidad" placeholder="Cantidad requerida">
+            </div>
+            <div>
+              <label><input type="checkbox" name="faceplate_bocas_visible[]" value="3"> 3</label>
+              <input type="number" name="faceplate_3_cantidad" placeholder="Cantidad requerida">
+            </div>
+            <div >
+              <label><input type="checkbox" name="faceplate_bocas_visible[]" value="4"> 4</label>
+              <input type="number" name="faceplate_4_cantidad" placeholder="Cantidad requerida">
+            </div>
+
+            <label for="faceplate_cantidad_visible">Cantidad total de faceplates:</label>
+            <input type="number" name="faceplate_cantidad_visible" id="faceplate_cantidad_visible" placeholder="Cantidad total">
+          </div>
+
+
     </div>
 
     <hr>
-    <h1>Canalización y montaje</h1>
-    <div class="checkbox-group" id="canalizacion">
-      <label><input type="checkbox" name="canalizacion[]" value="Canaleta plástica"> Canaleta plástica</label>
-      <label><input type="checkbox" name="canalizacion[]" value="EMT metálico"> EMT metálico — diámetro:</label>
-      <label><input type="checkbox" name="canalizacion[]" value="Bandeja portacable"> Bandeja portacable</label>
-      <label><input type="checkbox" name="canalizacion[]" value="Gabinete"> Gabinete / Rack (tipo / tamaño):</label>
-      <label><input type="checkbox" name="canalizacion[]" value="Organizadores de cableado"> Organizadores de cableado</label>
-    </div>
+    <hr>
+<h1>Canalización y montaje</h1>
+<div class="checkbox-group" id="canalizacion">
 
-    <div id="campo-canaleta" class="oculto">
-      <label for="tamano_canaleta">Tamaño de canaleta plástica (mm):</label>
-      <input type="text" name="tamano_canaleta" id="tamano_canaleta">
-    </div>
+  <label>
+    <input type="checkbox" name="canalizacion[]" value="Canaleta plástica">
+    Canaleta plástica
+  </label>
+  <div id="campo-canaleta" class="oculto">
+    <label for="tamano_canaleta">Tamaño de canaleta plástica:</label>
+    <input type="text" name="tamano_canaleta" id="tamano_canaleta" placeholder="Ej: 40x25">
+  </div>
 
-    <div id="campo-diametro" class="oculto">
-      <label for="diametro_emt">Diámetro EMT (en mm):</label>
-      <input type="text" name="diametro_emt" id="diametro_emt">
-    </div>
+  <label>
+    <input type="checkbox" name="canalizacion[]" value="EMT metálico">
+    EMT metálico
+  </label>
+  <div id="campo-diametro" class="oculto">
+    <label for="diametro_emt">Diámetro EMT:</label>
+    <input type="text" name="diametro_emt" id="diametro_emt" placeholder="Ej: 25mm">
+  </div>
 
-    <div id="campo-bandeja" class="oculto">
-      <label for="cantidad_bandeja">Cantidad de bandejas:</label>
-      <input type="number" name="cantidad_bandeja" id="cantidad_bandeja">
-    </div>
+  <label>
+    <input type="checkbox" name="canalizacion[]" value="Bandeja portacable">
+    Bandeja portacable
+  </label>
+  <div id="campo-bandeja" class="oculto">
+    <label for="cantidad_bandeja">Cantidad de bandejas:</label>
+    <input type="number" name="cantidad_bandeja" id="cantidad_bandeja" placeholder="Ej: 2">
+  </div>
 
-    <div id="campo-gabinete" class="oculto">
-      <label for="gabinete_tipo">Tipo de gabinete:</label>
-      <input type="text" name="gabinete_tipo" id="gabinete_tipo">
-      <label for="gabinete_tamano">Tamaño del gabinete:</label>
-      <input type="text" name="gabinete_tamano" id="gabinete_tamano">
-    </div>
+  <label>
+    <input type="checkbox" name="canalizacion[]" value="Gabinete">
+    Gabinete / Rack
+  </label>
+  <div id="campo-gabinete" class="oculto">
+    <label for="gabinete_tipo">Tipo de gabinete:</label>
+    <input type="text" name="gabinete_tipo" id="gabinete_tipo" placeholder="Ej: Rack mural">
+    
+    <label for="gabinete_tamano">Tamaño del gabinete:</label>
+    <input type="text" name="gabinete_tamano" id="gabinete_tamano" placeholder="Ej: 12U">
+  </div>
+
+  <label>
+    <input type="checkbox" name="canalizacion[]" value="Organizadores de cableado">
+    Organizadores de cableado
+  </label>
+</div>
 
     <hr>
     <h1>Equipos activos</h1>
     <div class="checkbox-group" id="equipos">
-      <label><input type="checkbox" name="equipos[]" value="Switch"> Switch</label>
+      <!--<label><input type="checkbox" name="equipos[]" value="Switch"> Switch</label>-->
       <label><input type="checkbox" name="equipos[]" value="PDU"> PDU</label>
       <label><input type="checkbox" name="equipos[]" value="Otros"> Otros (especificar)</label>
     </div>
@@ -199,166 +236,29 @@ if (!isset($_SESSION['id_usuario'])) {
     </div>
     <hr>
 
-    <input type="submit" value="Enviar">
-    <hr>
-
     <h2>Autorización especial / requisitos de seguridad</h2>
     <label><input type="checkbox" name="seguridad[]" value="Autorización previa de Seguridad"> Se requiere autorización previa de Seguridad del banco</label>
     <label><input type="checkbox" name="seguridad[]" value="Acceso a sala técnica"> Se requiere acceso a sala técnica / Data Center</label>
     <label><input type="checkbox" name="seguridad[]" value="Presencia de personal del banco"> Se requiere presencia de personal del banco en sitio</label>
     <label><input type="checkbox" name="seguridad[]" value="Sin autorizaciones especiales"> No se requieren autorizaciones especiales</label>
+    <label class="lbl-id-name" style="position: relative; top: 40px; left: 320px;">Solicitado por: <?= htmlspecialchars($_SESSION['nombre']) ?></label>
     <hr>
 
-    <h4 style="text-align: center;">&copy; JUSTECH</h4>
+    <h2>Adjunto (Opcional)</h2>
+        <label for="file1">Archivo opcional 1</label>
+        <input type="file" name="file_opcional" id="file1" accept=".pdf,.jpg,.jpeg,.png">
+        
+        <label for="file2">Archivo opcional 2</label>
+        <input type="file" name="file_opcional2" id="file2" accept=".pdf,.jpg,.jpeg,.png">
+
+    <hr>
+           <input type="submit" value="Enviar">
+           
+    <hr>
+    <h4 style="text-align: center;">&copy; 2025 JUSTECH</h4>
   </form>
 </div>
 
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // Tipo de servicio
-    document.querySelectorAll('#tipo-servicio input').forEach(input => {
-      input.addEventListener('change', () => {
-        const checkboxes = Array.from(document.querySelectorAll('#tipo-servicio input'));
-        const otro = checkboxes.some(i => i.checked && i.value === "Otro");
-        const otrosSeleccionados = checkboxes.some(i => i.checked && i.value !== "Otro");
-
-        document.getElementById('campo-describir').classList.toggle('oculto', !otro);
-        document.getElementById('campo-cantidad-servicio').classList.toggle('oculto', !otrosSeleccionados);
-      });
-    });
-
-    // Materiales - campos dinámicos y limpieza automática
-    function toggleField(checkbox, campoId, visibleInputIds, hiddenInputNames) {
-      const campo = document.getElementById(campoId);
-      campo.classList.toggle('oculto', !checkbox.checked);
-      if (!checkbox.checked) {
-        // Limpiar visibles
-        visibleInputIds.forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.value = '';
-        });
-        // Limpiar ocultos
-        hiddenInputNames.forEach(name => {
-          const el = document.querySelector(`input[name="${name}"]`);
-          if (el) el.value = '';
-        });
-      }
-    }
-
-    // Mapeo materiales con sus campos visibles y ocultos
-    const materialesMap = {
-      "Cable UTP Cat6": {
-        campo: "campo-Cable UTP Cat6",
-        visibles: ["detalle_Cable_UTP_visible"],
-        ocultos: ["detalle_Cable_UTP"]
-      },
-      "Patch cord (RJ45)": {
-        campo: "campo-Patch cord (RJ45)",
-        visibles: ["detalle_Patch_cord_visible"],
-        ocultos: ["detalle_Patch_cord"]
-      },
-      "Conector RJ45": {
-        campo: "campo-Conector RJ45",
-        visibles: ["detalle_Conector_RJ45_visible"],
-        ocultos: ["detalle_Conector_RJ45"]
-      },
-      "Jack / Mini Jack RJ45": {
-        campo: "campo-Jack / Mini Jack RJ45",
-        visibles: ["detalle_Jack_visible"],
-        ocultos: ["detalle_Jack"]
-      },
-      "Patch panel": {
-        campo: "campo-Patch panel",
-        visibles: ["detalle_Patch_panel_visible"],
-        ocultos: ["detalle_Patch_panel"]
-      },
-      "Faceplate": {
-        campo: "campo-faceplate",
-        visibles: ["faceplate_bocas_visible", "faceplate_cantidad_visible"],
-        ocultos: ["faceplate_bocas", "faceplate_cantidad"]
-      }
-    };
-
-    document.querySelectorAll('#materiales input[type="checkbox"]').forEach(input => {
-      input.addEventListener('change', () => {
-        const m = materialesMap[input.value];
-        if (m) {
-          toggleField(input, m.campo, m.visibles, m.ocultos);
-        }
-      });
-    });
-
-    // Canalización - campos dinámicos y limpieza
-    function limpiarCamposCanalizacion() {
-      ['tamano_canaleta', 'diametro_emt', 'cantidad_bandeja', 'gabinete_tipo', 'gabinete_tamano'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-    }
-
-    document.querySelectorAll('#canalizacion input[type="checkbox"]').forEach(input => {
-      input.addEventListener('change', () => {
-        const canaleta = input.value === "Canaleta plástica" && input.checked;
-        const emt = input.value === "EMT metálico" && input.checked;
-        const bandeja = input.value === "Bandeja portacable" && input.checked;
-        const gabinete = input.value === "Gabinete" && input.checked;
-
-        document.getElementById('campo-canaleta').classList.toggle('oculto', !canaleta);
-        if (!canaleta) document.getElementById('tamano_canaleta').value = '';
-
-        document.getElementById('campo-diametro').classList.toggle('oculto', !emt);
-        if (!emt) document.getElementById('diametro_emt').value = '';
-
-        document.getElementById('campo-bandeja').classList.toggle('oculto', !bandeja);
-        if (!bandeja) document.getElementById('cantidad_bandeja').value = '';
-
-        document.getElementById('campo-gabinete').classList.toggle('oculto', !gabinete);
-        if (!gabinete) {
-          document.getElementById('gabinete_tipo').value = '';
-          document.getElementById('gabinete_tamano').value = '';
-        }
-      });
-    });
-
-    // Equipos activos - campos dinámicos y limpieza
-    document.querySelectorAll('#equipos input[type="checkbox"]').forEach(input => {
-      input.addEventListener('change', () => {
-        const otros = input.value === "Otros" && input.checked;
-        const pdu = input.value === "PDU" && input.checked;
-
-        document.getElementById('campo-especificar').classList.toggle('oculto', !otros);
-        if (!otros) document.getElementById('equipo_otro').value = '';
-
-        document.getElementById('campo-pdu').classList.toggle('oculto', !pdu);
-        if (!pdu) document.getElementById('cantidad_pdu').value = '';
-      });
-    });
-
-    // Copiar valores de inputs visibles a ocultos justo antes de enviar
-    document.querySelector('form').addEventListener('submit', function(event) {
-      // Materiales detalles
-      document.querySelector('input[name="detalle_Cable_UTP"]').value =
-        document.getElementById('detalle_Cable_UTP_visible').value || '';
-
-      document.querySelector('input[name="detalle_Patch_cord"]').value =
-        document.getElementById('detalle_Patch_cord_visible').value || '';
-
-      document.querySelector('input[name="detalle_Conector_RJ45"]').value =
-        document.getElementById('detalle_Conector_RJ45_visible').value || '';
-
-      document.querySelector('input[name="detalle_Jack"]').value =
-        document.getElementById('detalle_Jack_visible').value || '';
-
-      document.querySelector('input[name="detalle_Patch_panel"]').value =
-        document.getElementById('detalle_Patch_panel_visible').value || '';
-
-      document.querySelector('input[name="faceplate_bocas"]').value =
-        document.getElementById('faceplate_bocas_visible').value || '';
-
-      document.querySelector('input[name="faceplate_cantidad"]').value =
-        document.getElementById('faceplate_cantidad_visible').value || '';
-    });
-  });
-</script>
+<script src="js/form.js"></script>
 </body>
 </html>

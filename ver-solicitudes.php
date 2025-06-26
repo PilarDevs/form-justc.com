@@ -76,7 +76,8 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <th>Usuario</th>
       <th>Fecha</th>
       <th>Estado</th>
-      <th>Actualizar</th>
+      <th>Actualizar estado</th>
+      <th>Editar</th>
       <th>PDF</th>
     </tr>
   </thead>
@@ -96,6 +97,7 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <td>
         <button class="btn-guardar" onclick="actualizarEstatus(<?= $s['id'] ?>)">Guardar</button>
       </td>
+      <td><a class="btn-editar" href="editar-solicitud.php?id=<?= urlencode($s['id']) ?>">Editar</a></td>
       <td>
         <a href="pdf/generar_pdf.php?id=<?= $s['id'] ?>" target="_blank">
           <button class="btn-pdf">Indisponible</button>

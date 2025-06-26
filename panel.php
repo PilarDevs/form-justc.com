@@ -1,6 +1,11 @@
 <?php
 session_start();
 
+// Evitar que el navegador use la caché
+header("Cache-Control: no-store, no-cache, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+
 // Verificar sesión iniciada
 if (!isset($_SESSION['id_usuario'])) {
     header("Location: login.php");
@@ -13,6 +18,7 @@ if ($_SESSION['tipo'] !== 'admin') {
     exit;
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="es">

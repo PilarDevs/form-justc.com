@@ -75,7 +75,7 @@
   <div class="login-container">
     <h2>Iniciar Sesión</h2>
     <form id="loginForm">
-      <div class="g-recaptcha" data-sitekey="6Le_pm0rAAAAAKr9f9E_OG4QzTmhlo7gVbm4n27E"></div>
+      <!--<div class="g-recaptcha" data-sitekey="6Le_pm0rAAAAAKr9f9E_OG4QzTmhlo7gVbm4n27E"></div>-->
       <input type="text" id="usuario" name="usuario" required placeholder="Usuario" />
       <input type="password" id="contrasena" name="contrasena" required placeholder="Contraseña" />
       <input type="submit" value="Iniciar sesión" />
@@ -89,13 +89,13 @@
       const form = this;
       const formData = new FormData(form);
       
-      const token = grecaptcha.getResponse();
+      /*const token = grecaptcha.getResponse();
       if (!token) {
         alert("Completa el reCAPTCHA");
         return;
-      }
+      } */
 
-      formData.append('g-recaptcha-response', token);
+      //formData.append('g-recaptcha-response', token);
       
       try {
         const res = await fetch('login-.php', {

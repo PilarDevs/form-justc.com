@@ -14,18 +14,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("UPDATE solicitudes SET estatus = ? WHERE id = ?");
         if ($stmt->execute([$estatus, $id])) {
 
-            // Obtener datos del usuario que hizo la solicitud
-            $stmtUsuario = $pdo->prepare("
-                SELECT u.nombre, u.correo 
-                FROM solicitudes s
-                INNER JOIN usuarios u ON s.id_usuario = u.id
-                WHERE s.id = ?
-            ");
-            $stmtUsuario->execute([$id]);
-            $usuario = $stmtUsuario->fetch(PDO::FETCH_ASSOC);
+            // Obtener todos los usuarios para enviar correo
+            $stmtUsuarios = $pdo->query("SELECT nombre, correo FROM usuarios");
+            $usuarios = $stmtUsuarios->fetchAll(PDO::FETCH_ASSOC);
 
-            if ($usuario) {
-                // Enviar correo
+            if ($usuarios) {
+                // Configuración SMTP
                 $config = require 'protegido/configMail.php';
 
                 $mail = new PHPMailer(true);
@@ -39,25 +33,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $mail->Port = 587;
 
                     $mail->setFrom($config['smtp_user'], 'Justech - Sistema de Solicitudes');
-                    $mail->addAddress($usuario['correo'], $usuario['nombre']);
-
                     $mail->isHTML(true);
-                    $mail->Subject = "Actualización de estado de su solicitud #$id";
+                    $mail->Subject = "Actualización de estado de la solicitud #$id";
                     $mail->Body = "
-                        Estimado/a <strong>{$usuario['nombre']}</strong>,<br><br>
-                        El estado de su solicitud con ID <strong>$id</strong> ha sido actualizado a <strong>$estatus</strong>.<br><br>
+                        Estimado/a usuario,<br><br>
+                        El estado de la solicitud con ID <strong>$id</strong> ha sido actualizado a <strong>$estatus</strong>.<br><br>
                         Puede ingresar al sistema para más detalles.<br><br>
                         Atentamente,<br>Equipo Justech.
                     ";
 
+                    // Agregar todos los destinatarios
+                    foreach ($usuarios as $usuario) {
+                        if (filter_var($usuario['correo'], FILTER_VALIDATE_EMAIL)) {
+                            $mail->addAddress($usuario['correo'], $usuario['nombre']);
+                        }
+                    }
+
                     $mail->send();
-                    echo "Estado actualizado y correo enviado.";
+                    echo "Estado actualizado y correo enviado a todos los usuarios.";
                 } catch (Exception $e) {
                     error_log("Error al enviar correo: " . $mail->ErrorInfo);
-                    echo "Estado actualizado, pero hubo un error al enviar el correo.";
+                    echo "Estado actualizado, pero hubo un error al enviar los correos.";
                 }
             } else {
-                echo "Estado actualizado, pero no se encontró el usuario.";
+                echo "Estado actualizado, pero no se encontraron usuarios para notificar.";
             }
         } else {
             echo "Error al actualizar.";

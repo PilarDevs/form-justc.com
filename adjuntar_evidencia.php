@@ -18,6 +18,9 @@ if (!$id_solicitud || !is_numeric($id_solicitud)) {
 }
 
 $mensaje = '';
+$archivosGuardados = [];
+$exito = false;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $comentario = trim($_POST['comentario'] ?? '');
     $archivos = $_FILES['archivos'] ?? null;
@@ -125,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $mail->send();
 
-                    // ACTUALIZAR A CERRADO
+                    // Actualizar el estatus a cerrado
                     $update = $pdo->prepare("UPDATE solicitudes SET estatus = 'cerrado' WHERE id = ?");
                     $update->execute([$id_solicitud]);
 
@@ -133,6 +136,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($errores) {
                         $mensaje .= "<br>Sin embargo, hubo algunos errores:<br>" . implode('<br>', $errores);
                     }
+
+                    $exito = true;
                 } catch (Exception $e) {
                     $mensaje = "Error al enviar correos: " . $mail->ErrorInfo;
                 }
@@ -140,7 +145,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+if ($exito) {
+    header("Location: ver-solicitudes.php?mensaje=soporte_enviado&id=$id_solicitud");
+    exit;
+}
 ?>
+
 
 
 <!DOCTYPE html>

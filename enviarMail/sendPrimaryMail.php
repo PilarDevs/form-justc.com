@@ -1,4 +1,5 @@
 <?php
+
 require 'vendor/autoload.php';
 require 'protegido/config.php'; // Conexión a la base de datos
 $config = require 'protegido/configMail.php'; // Configuración SMTP
@@ -6,7 +7,6 @@ $config = require 'protegido/configMail.php'; // Configuración SMTP
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-session_start();
 $id_usuario = $_SESSION['id_usuario'] ?? null;
 
 if (!$id_usuario) {
@@ -58,15 +58,16 @@ try {
 }
 
 // Enviar correo con el PDF adjunto
+
 $mail = new PHPMailer(true);
 try {
     $mail->isSMTP();
-    $mail->Host = 'smtp.gmail.com';
+    $mail->Host = $config['smtp_host'] ?? 'smtp.gmail.com';
     $mail->SMTPAuth = true;
     $mail->Username = $config['smtp_user'];
     $mail->Password = $config['smtp_pass'];
-    $mail->SMTPSecure = 'tls';
-    $mail->Port = 587;
+    $mail->SMTPSecure = $config['smtp_secure'] ?? 'tls';
+    $mail->Port = $config['smtp_port'] ?? 587;
 
     $mail->setFrom($config['smtp_user'], 'Sistema de Solicitudes');
     $mail->addAddress($config['smtp_to'], 'Solicitante');
@@ -75,24 +76,30 @@ try {
     $mail->isHTML(true);
     $mail->Subject = 'Nueva solicitud de instalación/reparación de red';
     $mail->Body = "Se ha recibido una nueva solicitud técnica.<br>Se adjunta el PDF con los detalles.";
-    $mail->addAttachment($rutaPDF);
 
+    // Adjuntar PDF principal si existe
+    if (file_exists($rutaPDF)) {
+        $mail->addAttachment($rutaPDF);
+    } else {
+        throw new Exception('No se pudo adjuntar el PDF principal.');
+    }
+
+    // Adjuntar archivos opcionales si existen y la ruta no está vacía
     if (!empty($urlArchivo1)) {
-        $rutaArchivo1 = __DIR__ . '/../' . $urlArchivo1;
+        $rutaArchivo1 = __DIR__ . '/../' . ltrim($urlArchivo1, '/\\');
         if (file_exists($rutaArchivo1)) {
             $mail->addAttachment($rutaArchivo1);
         }
     }
 
     if (!empty($urlArchivo2)) {
-        $rutaArchivo2 = __DIR__ . '/../' . $urlArchivo2;
+        $rutaArchivo2 = __DIR__ . '/../' . ltrim($urlArchivo2, '/\\');
         if (file_exists($rutaArchivo2)) {
             $mail->addAttachment($rutaArchivo2);
         }
     }
 
     $mail->send();
-
     echo "<script>alert('Solicitud enviada correctamente'); window.location='panel-usuario.php';</script>";
 } catch (Exception $e) {
     echo "Error al enviar el correo: {$mail->ErrorInfo}";

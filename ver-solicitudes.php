@@ -123,7 +123,7 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <td>
             <select id="estatus-<?= $s['id'] ?>">
               <option value="pendiente" <?= $s['estatus'] === 'pendiente' ? 'selected' : '' ?>>Pendiente</option>
-              <option value="completada" <?= $s['estatus'] === 'completada' ? 'selected' : '' ?>>Completada</option>
+              <option value="completada" <?= $s['estatus'] === 'completada' || $s['estatus'] === 'cerrado' ? 'selected' : '' ?>>Completada</option>
             </select>
           </td>
           <td>

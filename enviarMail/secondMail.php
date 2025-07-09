@@ -1,4 +1,5 @@
 <?php
+
 require 'vendor/autoload.php';
 require 'protegido/config.php'; // Conexión a la base de datos
 $config = require 'protegido/configMail.php'; // Configuración SMTP
@@ -6,7 +7,7 @@ $config = require 'protegido/configMail.php'; // Configuración SMTP
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-session_start();
+
 $id_usuario = $_SESSION['id_usuario'] ?? null;
 
 if (!$id_usuario) {

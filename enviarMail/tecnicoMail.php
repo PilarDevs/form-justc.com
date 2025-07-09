@@ -1,4 +1,5 @@
 <?php
+session_start();
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -7,7 +8,7 @@ require '../vendor/autoload.php';
 require '../protegido/config.php'; // Conexión BD
 $config = require '../protegido/configMail.php'; // SMTP
 
-session_start();
+
 if (!isset($_SESSION['id_usuario']) || $_SESSION['tipo'] !== 'admin') {
     die("Acceso denegado.");
 }

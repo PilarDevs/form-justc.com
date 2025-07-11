@@ -12,7 +12,10 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['tipo'] !== 'admin') {
 }
 
 $id_solicitud = $_GET['id'] ?? null;
-if (!$id_solicitud || !is_numeric($id_solicitud)) {
+    $stmtSucursal = $pdo->prepare("SELECT sucursal FROM detalles_solicitudes WHERE id_solicitud = ?");
+    $stmtSucursal->execute([$id_solicitud]);
+    $sucursal = $stmtSucursal->fetchColumn();
+    if (!$id_solicitud || !is_numeric($id_solicitud)) {
     echo "ID inválido.";
     exit;
 }
@@ -113,11 +116,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $listaArchivos .= "</ul>";
 
                     $body = "
-                        <p>Se ha adjuntado soporte final para la solicitud <strong>#$id_solicitud</strong>.</p>
-                        <p><strong>Comentario:</strong><br>" . nl2br(htmlspecialchars($comentario)) . "</p>
-                        <p><strong>Archivos adjuntos:</strong>$listaArchivos</p>
-                        <p><strong>El ticket ha sido marcado como <span style='color:red;'>CERRADO</span>.</strong></p>
-                    ";
+                            <p>Se ha adjuntado soporte final para la solicitud <strong>#$id_solicitud</strong>.</p>
+                            <p><strong>Sucursal:</strong> " . htmlspecialchars($sucursal) . "</p>
+                            <p><strong>Comentario:</strong><br>" . nl2br(htmlspecialchars($comentario)) . "</p>
+                            <p><strong>Archivos adjuntos:</strong>$listaArchivos</p>
+                            <p><strong>El ticket ha sido marcado como <span style='color:red;'>CERRADO</span>.</strong></p>
+                        ";
+
                     $mail->Body = $body;
 
                     foreach ($usuarios as $usuario) {

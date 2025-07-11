@@ -111,7 +111,6 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <th>Editar</th>
         <th>Asignar técnico</th>
         <th>Cerrar ticket</th>
-        <th>PDF</th>
       </tr>
     </thead>
     <tbody>
@@ -137,11 +136,6 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
           </td>
           <td>
             <a class="btn-editar" href="adjuntar_evidencia.php?id=<?= $s['id'] ?>">Cerrar</a>
-          </td>
-          <td>
-            <a href="pdf/generar_pdf.php?id=<?= $s['id'] ?>" target="_blank">
-              <button class="btn-pdf">Indisponible</button>
-            </a>
           </td>
         </tr>
       <?php endforeach; ?>

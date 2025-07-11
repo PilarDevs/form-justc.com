@@ -67,6 +67,11 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
       cursor: pointer;
     }
 
+    .btn-pdf:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
+    }
+
     .btn-editar {
       background-color: #007bff;
       color: white;
@@ -84,7 +89,7 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
       background-color: #218838;
     }
 
-    .btn-pdf:hover {
+    .btn-pdf:hover:not(:disabled) {
       background-color: #c82333;
     }
 
@@ -111,6 +116,7 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <th>Editar</th>
         <th>Asignar técnico</th>
         <th>Cerrar ticket</th>
+        <th>Ver PDF</th>
       </tr>
     </thead>
     <tbody>
@@ -136,6 +142,13 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
           </td>
           <td>
             <a class="btn-editar" href="adjuntar_evidencia.php?id=<?= $s['id'] ?>">Cerrar</a>
+          </td>
+          <td>
+            <?php if (!empty($s['url_pdf']) && file_exists(__DIR__ . '/pdfs/' . $s['url_pdf'])): ?>
+              <button class="btn-pdf" onclick="window.open('pdfs/<?= urlencode($s['url_pdf']) ?>', '_blank')">Abrir PDF</button>
+            <?php else: ?>
+              <button class="btn-pdf" disabled>No disponible</button>
+            <?php endif; ?>
           </td>
         </tr>
       <?php endforeach; ?>

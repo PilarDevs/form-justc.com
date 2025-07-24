@@ -14,11 +14,28 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['tipo'] !== 'admin') {
 }
 
 // Entradas
+
 $id_solicitud = $_POST['id_solicitud'] ?? null;
 $tecnicos = $_POST['tecnicos'] ?? [];
+$nuevos_tecnicos = $_POST['nuevo_tecnico'] ?? [];
 
-if (!$id_solicitud || empty($tecnicos)) {
+if (!$id_solicitud || (empty($tecnicos) && empty($nuevos_tecnicos))) {
     die("Faltan datos.");
+}
+
+// Guardar nuevos técnicos en la tabla tecnicos si no existen y agregarlos a la lista de asignación
+foreach ($nuevos_tecnicos as $nuevo) {
+    $nuevo = trim($nuevo);
+    if (!empty($nuevo)) {
+        // Insertar solo si no existe
+        $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM tecnicos WHERE nombre = ?");
+        $stmtCheck->execute([$nuevo]);
+        if ($stmtCheck->fetchColumn() == 0) {
+            $stmtAdd = $pdo->prepare("INSERT INTO tecnicos (nombre) VALUES (?)");
+            $stmtAdd->execute([$nuevo]);
+        }
+        $tecnicos[] = $nuevo;
+    }
 }
 
 // Guardar técnicos en la tabla relacional
@@ -69,7 +86,7 @@ try {
     }
 
     $mail->send();
-    echo "<script>alert('Técnico(s) asignado(s) y correo enviado a todos los usuarios.'); window.location.href = 'ver-solicitudes.php';</script>";
+    echo "<script>alert('Técnico(s) asignado(s) y correo enviado a todos los usuarios.'); window.location.href = '../ver-solicitudes.php';</script>";
 } catch (Exception $e) {
     echo "Error al enviar el correo: {$mail->ErrorInfo}";
 }

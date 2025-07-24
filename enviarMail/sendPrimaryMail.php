@@ -72,6 +72,7 @@ try {
     $mail->setFrom($config['smtp_user'], 'Sistema de Solicitudes');
     $mail->addAddress($config['smtp_to'], 'Solicitante');
     $mail->addAddress($correo_usuario);
+    $mail->addAddress('it@justech.do', 'Correo estandar'); // Cambia este correo por el que desees recibir siempre
 
     $mail->isHTML(true);
     $mail->Subject = 'Nueva solicitud de instalación/reparación de red';

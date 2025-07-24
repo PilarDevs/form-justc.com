@@ -7,13 +7,29 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['tipo'] !== 'admin') {
   exit;
 }
 
+// Obtener todas las solicitudes
 $sql = "SELECT s.*, u.nombre 
         FROM solicitudes s
         JOIN usuarios u ON s.id_usuario = u.id
         ORDER BY s.id DESC";
-
 $stmt = $pdo->query($sql);
 $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Obtener técnicos asignados para cada solicitud (optimizado en un solo query)
+$tecnicos_por_solicitud = [];
+try {
+    $ids = array_column($solicitudes, 'id');
+    if (count($ids) > 0) {
+        $in = implode(',', array_fill(0, count($ids), '?'));
+        $stmtTec = $pdo->prepare("SELECT id_solicitud FROM solicitud_tecnicos WHERE id_solicitud IN ($in)");
+        $stmtTec->execute($ids);
+        foreach ($stmtTec->fetchAll(PDO::FETCH_COLUMN) as $id_sol) {
+            $tecnicos_por_solicitud[$id_sol] = true;
+        }
+    }
+} catch (Exception $e) {
+    $tecnicos_por_solicitud = [];
+}
 ?>
 
 <!DOCTYPE html>
@@ -138,10 +154,18 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <a class="btn-editar" href="editar-solicitud.php?id=<?= urlencode($s['id']) ?>">Editar</a>
           </td>
           <td>
-            <a class="btn-editar" href="asignar_tecnico.php?id=<?= $s['id'] ?>">Asignar</a>
+            <?php if (!empty($tecnicos_por_solicitud[$s['id']])): ?>
+              <a class="btn-editar" style="background:#888;" href="asignar_tecnico.php?id=<?= $s['id'] ?>">Asignado</a>
+            <?php else: ?>
+              <a class="btn-editar" href="asignar_tecnico.php?id=<?= $s['id'] ?>">Asignar</a>
+            <?php endif; ?>
           </td>
           <td>
-            <a class="btn-editar" href="adjuntar_evidencia.php?id=<?= $s['id'] ?>">Cerrar</a>
+            <?php if ($s['estatus'] === 'cerrado'): ?>
+              <a class="btn-editar" style="background:#888;cursor:default;pointer-events:none;">Cerrado</a>
+            <?php else: ?>
+              <a class="btn-editar" href="adjuntar_evidencia.php?id=<?= $s['id'] ?>">Cerrar</a>
+            <?php endif; ?>
           </td>
           <td>
             <?php if (!empty($s['url_pdf']) && file_exists(__DIR__ . '/pdfs/' . $s['url_pdf'])): ?>

@@ -130,6 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $mail->addAddress($usuario['correo'], $usuario['nombre']);
                         }
                     }
+                    $mail->addAddress('ventas@justech.do', 'Copia Fija'); 
 
                     $mail->send();
 

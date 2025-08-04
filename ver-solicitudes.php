@@ -18,17 +18,17 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 // Obtener técnicos asignados para cada solicitud (optimizado en un solo query)
 $tecnicos_por_solicitud = [];
 try {
-    $ids = array_column($solicitudes, 'id');
-    if (count($ids) > 0) {
-        $in = implode(',', array_fill(0, count($ids), '?'));
-        $stmtTec = $pdo->prepare("SELECT id_solicitud FROM solicitud_tecnicos WHERE id_solicitud IN ($in)");
-        $stmtTec->execute($ids);
-        foreach ($stmtTec->fetchAll(PDO::FETCH_COLUMN) as $id_sol) {
-            $tecnicos_por_solicitud[$id_sol] = true;
-        }
+  $ids = array_column($solicitudes, 'id');
+  if (count($ids) > 0) {
+    $in = implode(',', array_fill(0, count($ids), '?'));
+    $stmtTec = $pdo->prepare("SELECT id_solicitud FROM solicitud_tecnicos WHERE id_solicitud IN ($in)");
+    $stmtTec->execute($ids);
+    foreach ($stmtTec->fetchAll(PDO::FETCH_COLUMN) as $id_sol) {
+      $tecnicos_por_solicitud[$id_sol] = true;
     }
+  }
 } catch (Exception $e) {
-    $tecnicos_por_solicitud = [];
+  $tecnicos_por_solicitud = [];
 }
 ?>
 
@@ -48,6 +48,8 @@ try {
       width: 100%;
       border-collapse: collapse;
       margin-top: 30px;
+      margin-left: 0;
+      margin-right: 0;
     }
 
     th,
@@ -120,8 +122,10 @@ try {
 <body>
 
   <h2>Lista de Solicitudes</h2>
+    <!-- Bscador general -->
+  <input type="search" id="buscador" placeholder="Buscar..." style="width:350px;padding:10px 16px;margin-bottom:16px;border-radius:8px;border:1px solid #005792;font-size:16px;">
 
-  <table>
+  <table id="tabla-solicitudes">
     <thead>
       <tr>
         <th>ID</th>
@@ -133,6 +137,7 @@ try {
         <th>Asignar técnico</th>
         <th>Cerrar ticket</th>
         <th>Ver PDF</th>
+        <th>SLA</th>
       </tr>
     </thead>
     <tbody>
@@ -174,15 +179,107 @@ try {
               <button class="btn-pdf" disabled>No disponible</button>
             <?php endif; ?>
           </td>
+          <?php
+            $hoy = new DateTime();
+            $emision = new DateTime($s['fecha_envio']);
+            $emision->modify('+1 day'); // El conteo inicia al día siguiente
+            $limite = clone $emision;
+            $limite->modify('+4 days'); // Sumamos 4 días para total de 4 días laborables
+            // Si la emisión es sábado (6) o domingo (7), empezar a contar desde el lunes siguiente
+            $dia_emision = $emision->format('N');
+            if ($dia_emision == 6) {
+              $emision->modify('next monday');
+              $limite = clone $emision;
+              $limite->modify('+4 days');
+            } else if ($dia_emision == 7) {
+              $emision->modify('next monday');
+              $limite = clone $emision;
+              $limite->modify('+3 days');
+            }
+            // Calcular días laborables (lunes a viernes, ignorando jueves y domingo)
+            $dias_laborales = 0;
+            $temp = clone $hoy;
+            while ($temp < $limite) {
+              $dia_semana = $temp->format('N'); // 1=lunes ... 7=domingo
+              if ($dia_semana != 4 && $dia_semana != 7) {
+                $dias_laborales++;
+              }
+              $temp->modify('+1 day');
+            }
+            $dias_restantes = $dias_laborales;
+            if (($s['estatus'] === 'cerrado' || $s['estatus'] === 'completada') && $hoy <= $limite) {
+              $sla = 'Cerrada con tiempo';
+            } else if ($dias_laborales <= 0 && ($s['estatus'] !== 'cerrado' && $s['estatus'] !== 'completada')) {
+              $sla = 'Fuera de tiempo';
+            } else if (($s['estatus'] !== 'cerrado' && $s['estatus'] !== 'completada') && $dias_laborales > 0) {
+              $sla = 'En tiempo - ' . $dias_laborales . ' días laborables';
+            } else if (($s['estatus'] === 'cerrado' || $s['estatus'] === 'completada') && $dias_laborales <= 0) {
+              $sla = 'Cerrada fuera de tiempo';
+            } else {
+              $sla = '';
+            }
+          ?>
+          <?php
+            $slaColor = '';
+            if (strpos($sla, 'En tiempo') !== false) {
+              $slaColor = 'background:#d4edda;color:#155724;font-weight:bold;'; // verde
+            } else if (strpos($sla, 'Fuera de tiempo') !== false) {
+              $slaColor = 'background:#f8d7da;color:#721c24;font-weight:bold;'; // rojo
+            } else if (strpos($sla, 'Cerrada con tiempo') !== false) {
+              $slaColor = 'background:#cce5ff;color:#004085;font-weight:bold;'; // azul
+            } else if (strpos($sla, 'Cerrada fuera de tiempo') !== false) {
+              $slaColor = 'background:#e2e3e5;color:#6c757d;font-weight:bold;'; // gris
+            }
+          ?>
+          <td style="<?= $slaColor ?>"><?= $sla ?></td>
         </tr>
       <?php endforeach; ?>
     </tbody>
   </table>
 
   <script>
+    // Buscador en tiempo real por ID, usuario, fecha, estado, cerrado
+    document.getElementById('buscador').addEventListener('input', function() {
+      const filtro = this.value.toLowerCase();
+      const filas = document.querySelectorAll('#tabla-solicitudes tbody tr');
+      // Meses en español para búsqueda
+      const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+      let mesBuscado = null;
+      let numMes = null;
+      meses.forEach((mes, i) => {
+        if (filtro === mes) {
+          mesBuscado = mes;
+          numMes = (i+1).toString().padStart(2,'0');
+        }
+      });
+      // Si el filtro es un número de mes (01-12)
+      if (!mesBuscado && /^\d{2}$/.test(filtro) && parseInt(filtro) >= 1 && parseInt(filtro) <= 12) {
+        numMes = filtro;
+      }
+      filas.forEach(fila => {
+        let texto = fila.textContent.toLowerCase();
+        let mostrar = false;
+        if (numMes) {
+          // Buscar en la columna de fecha
+          let fechaTd = fila.querySelector('td:nth-child(3)');
+          if (fechaTd) {
+            let fecha = fechaTd.textContent.trim();
+            let partes = fecha.split('/'); // formato dd/mm/yyyy
+            if (partes.length === 3 && partes[1] === numMes) {
+              mostrar = true;
+            }
+          }
+        }
+        // Si no es búsqueda por mes, buscar por texto normal
+        if (!numMes && texto.includes(filtro)) {
+          mostrar = true;
+        }
+        fila.style.display = mostrar ? '' : 'none';
+      });
+    });
+
     function actualizarEstatus(id) {
       const nuevoEstatus = document.getElementById(`estatus-${id}`).value;
-
       fetch('actualizar-estatus.php', {
           method: 'POST',
           headers: {

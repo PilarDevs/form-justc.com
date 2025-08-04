@@ -8,23 +8,24 @@ header("Expires: 0");
 
 // Verificar sesión iniciada
 if (!isset($_SESSION['id_usuario'])) {
-    header("Location: login.php");
-    exit;
+  header("Location: login.php");
+  exit;
 }
 
 // Redirigir si no es admin
 if ($_SESSION['tipo'] !== 'admin') {
-    header("Location: form-tecnico.php");
-    exit;
+  header("Location: form-tecnico.php");
+  exit;
 }
 ?>
 
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Panel de control</title>
   <link rel="icon" href="img/just-logo.png" type="image/png" />
   <style>
@@ -40,7 +41,7 @@ if ($_SESSION['tipo'] !== 'admin') {
     }
 
     .panel-container {
-      max-width: 1000px;
+        max-width: 1600px;
       margin: auto;
       background-color: white;
       padding: 30px 20px;
@@ -112,39 +113,41 @@ if ($_SESSION['tipo'] !== 'admin') {
     }
   </style>
 </head>
+
 <body>
 
-<div class="panel-container">
-  <img src="img/just-logo.png" alt="Logo Justech">
-  <h1>Panel de Control</h1>
-  <h2>Bienvenido, <?= htmlspecialchars($_SESSION['nombre']) ?>.</h2>
+  <div class="panel-container">
+    <img src="img/just-logo.png" alt="Logo Justech">
+    <h1>Panel de Control</h1>
+    <h2>Bienvenido, <?= htmlspecialchars($_SESSION['nombre']) ?>.</h2>
 
-  <div class="button-group">
-    <button onclick="cargarContenido('ver-solicitudes.php')">Ver solicitudes</button>
-    <button onclick="cargarContenido('ver-usuarios.php')">Ver usuarios</button>
-    <button onclick="cargarContenido('agregar-usuario.php')">Agregar usuario</button>
-    <button onclick="window.location.href='form-tecnico.php'">Ir a página</button>
-    <button onclick="window.location.href='logout.php'">Cerrar sesión</button>
+    <div class="button-group">
+      <button onclick="cargarContenido('ver-solicitudes.php')">Ver solicitudes</button>
+      <button onclick="cargarContenido('ver-usuarios.php')">Ver usuarios</button>
+      <button onclick="cargarContenido('agregar-usuario.php')">Agregar usuario</button>
+      <button onclick="window.location.href='form-tecnico.php'">Ir a página</button>
+      <button onclick="window.location.href='logout.php'">Cerrar sesión</button>
+    </div>
+
+    <div class="oculto" id="contenedor-iframe">
+      <iframe id="panel-frame" src=""></iframe>
+    </div>
   </div>
 
-  <div class="oculto" id="contenedor-iframe">
-    <iframe id="panel-frame" src=""></iframe>
-  </div>
-</div>
+  <script>
+    const usuario = localStorage.getItem('usuario');
+    const nombre = localStorage.getItem('nombre');
 
-<script>
-  const usuario = localStorage.getItem('usuario');
-  const nombre = localStorage.getItem('nombre');
+    if (!usuario || !nombre) {
+      window.location.href = "logout.php";
+    }
 
-  if (!usuario || !nombre) {
-    window.location.href = "logout.php";
-  }
-
-  function cargarContenido(ruta) {
-    document.getElementById('panel-frame').src = ruta;
-    document.getElementById('contenedor-iframe').classList.remove('oculto');
-  }
-</script>
+    function cargarContenido(ruta) {
+      document.getElementById('panel-frame').src = ruta;
+      document.getElementById('contenedor-iframe').classList.remove('oculto');
+    }
+  </script>
 
 </body>
+
 </html>

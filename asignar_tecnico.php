@@ -132,6 +132,10 @@ try {
                     <button type="button" onclick="agregarTecnico()">+</button>
                 </div>
             </div>
+            <div style="margin-top:18px;margin-bottom:10px;">
+                <label for="comentario" style="font-weight:bold;">Comentario (opcional):</label><br>
+                <textarea name="comentario" id="comentario" rows="3" style="width:100%;max-width:500px;padding:8px;border-radius:6px;border:1px solid #ccc;resize:vertical;" placeholder="Agrega un comentario para el técnico..."></textarea>
+            </div>
             <input type="hidden" name="id_solicitud" value="<?= $id_solicitud ?>">
             <button type="submit" class="enviar">Asignar</button>
         </form>

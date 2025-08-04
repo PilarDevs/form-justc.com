@@ -58,11 +58,16 @@ foreach ($tecnicos as $t) {
 }
 $lista_tecnicos .= "</ul>";
 
+
+$comentario = isset($_POST['comentario']) ? trim($_POST['comentario']) : '';
 $mensajeHTML = "
     <p>Se han asignado los siguientes técnicos a la solicitud <strong>#{$id_solicitud}</strong>:</p>
     {$lista_tecnicos}
-    <p>Por favor, dar seguimiento correspondiente.</p>
 ";
+if (!empty($comentario)) {
+    $mensajeHTML .= "<p><strong>Comentario:</strong> " . nl2br(htmlspecialchars($comentario)) . "</p>";
+}
+$mensajeHTML .= "<p>Por favor, dar seguimiento correspondiente.</p>";
 
 // Configurar y enviar correo
 $mail = new PHPMailer(true);

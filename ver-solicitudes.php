@@ -137,7 +137,8 @@ try {
         <th>Asignar técnico</th>
         <th>Cerrar ticket</th>
         <th>Ver PDF</th>
-        <th>SLA</th>
+  <th>SLA</th>
+  <th>Reabrir</th>
       </tr>
     </thead>
     <tbody>
@@ -232,7 +233,30 @@ try {
             }
           ?>
           <td style="<?= $slaColor ?>"><?= $sla ?></td>
+          <td>
+            <?php if ($s['estatus'] === 'cerrado'): ?>
+              <button class="btn-reabrir" onclick="reabrirSolicitud(<?= $s['id'] ?>)">Reabrir</button>
+            <?php else: ?>
+              <span style="color:gray;">-</span>
+            <?php endif; ?>
+          </td>
         </tr>
+  <script>
+  function reabrirSolicitud(id) {
+    if(confirm('¿Seguro que deseas reabrir esta solicitud?')) {
+      fetch('reabrir_solicitud.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'id='+id
+      })
+      .then(r => r.text())
+      .then(resp => {
+        alert(resp);
+        location.reload();
+      });
+    }
+  }
+  </script>
       <?php endforeach; ?>
     </tbody>
   </table>

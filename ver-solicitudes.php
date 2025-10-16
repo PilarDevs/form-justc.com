@@ -8,10 +8,11 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['tipo'] !== 'admin') {
 }
 
 // Obtener todas las solicitudes
-$sql = "SELECT s.*, u.nombre 
-        FROM solicitudes s
-        JOIN usuarios u ON s.id_usuario = u.id
-        ORDER BY s.id DESC";
+$sql = "SELECT s.*, u.nombre, d.sucursal 
+  FROM solicitudes s
+  JOIN usuarios u ON s.id_usuario = u.id
+  LEFT JOIN detalles_solicitudes d ON s.id = d.id_solicitud
+  ORDER BY s.id DESC";
 $stmt = $pdo->query($sql);
 $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -131,14 +132,15 @@ try {
         <th>ID</th>
         <th>Usuario</th>
         <th>Fecha</th>
+        <th>Sucursal</th>
         <th>Estado</th>
         <th>Actualizar estado</th>
         <th>Editar</th>
         <th>Asignar técnico</th>
         <th>Cerrar ticket</th>
         <th>Ver PDF</th>
-  <th>SLA</th>
-  <th>Reabrir</th>
+        <th>SLA</th>
+        <th>Reabrir</th>
       </tr>
     </thead>
     <tbody>
@@ -147,6 +149,7 @@ try {
           <td><?= $s['id'] ?></td>
           <td><?= htmlspecialchars($s['nombre']) ?></td>
           <td><?= date('d/m/Y', strtotime($s['fecha_envio'])) ?></td>
+          <td><?= htmlspecialchars($s['sucursal'] ?? '-') ?></td>
           <td>
             <select id="estatus-<?= $s['id'] ?>">
               <option value="pendiente" <?= $s['estatus'] === 'pendiente' ? 'selected' : '' ?>>Pendiente</option>

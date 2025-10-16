@@ -86,6 +86,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (count($archivosGuardados) === 0) {
             $mensaje = "No se subió ningún archivo correctamente.<br>" . implode('<br>', $errores);
         } else {
+            // Generar PDF con las imágenes subidas
+            $imagenes = array_filter($archivosGuardados, function($a) {
+                $ext = strtolower(pathinfo($a['ruta'], PATHINFO_EXTENSION));
+                return in_array($ext, ['jpg','jpeg','png','gif']);
+            });
+            if (count($imagenes) > 0) {
+                $html = '<div style="font-family:Arial,sans-serif;max-width:700px;margin:auto;">';
+                $html .= '<h2 style="color:#005792;text-align:center;margin-bottom:10px;">Evidencias de Solicitud #'.htmlspecialchars($id_solicitud).'</h2>';
+                $html .= '<div style="background:#f6f7f9;border-radius:8px;padding:12px 18px;margin-bottom:18px;">';
+                $html .= '<strong>Sucursal:</strong> '.htmlspecialchars($sucursal).'<br>';
+                $html .= '<strong>Comentario:</strong><br><div style="margin:8px 0 0 0;padding:8px 12px;background:#fff;border-radius:6px;border:1px solid #e0e0e0;">'.nl2br(htmlspecialchars($comentario)).'</div>';
+                $html .= '</div>';
+                $html .= '<h3 style="color:#333;text-align:center;margin:30px 0 18px 0;border-bottom:1px solid #e0e0e0;padding-bottom:8px;">Imágenes adjuntas</h3>';
+                foreach ($imagenes as $img) {
+                    $ruta = $img['ruta'];
+                    $ext = strtolower(pathinfo($ruta, PATHINFO_EXTENSION));
+                    $mime = ($ext === 'jpg' || $ext === 'jpeg') ? 'image/jpeg' : (($ext === 'png') ? 'image/png' : (($ext === 'gif') ? 'image/gif' : ''));
+                    $imgData = base64_encode(file_get_contents($ruta));
+                    $src = 'data:' . $mime . ';base64,' . $imgData;
+                    $html .= '<div style="page-break-inside:avoid;margin-bottom:28px;padding:18px 0 10px 0;border-bottom:1px solid #e0e0e0;">';
+                    $html .= '<img src="'. $src .'" style="max-width:500px;max-height:600px;display:block;margin:auto 0 10px auto;border-radius:8px;box-shadow:0 2px 8px #bbb;">';
+                    $html .= '<div style="text-align:center;color:#555;font-size:0.98em;margin-top:4px;">'.htmlspecialchars($img['nombre']).'</div>';
+                    $html .= '</div>';
+                }
+                $html .= '</div>';
+                $pdfFile = $dir.'evidencias_solicitud_'.$id_solicitud.'.pdf';
+                $dompdf = new Dompdf\Dompdf();
+                $dompdf->loadHtml($html);
+                $dompdf->setPaper('A4', 'portrait');
+                $dompdf->render();
+                file_put_contents($pdfFile, $dompdf->output());
+            }
+
             $stmt = $pdo->query("SELECT correo, nombre FROM usuarios");
             $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -111,15 +144,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $listaArchivos = "<ul>";
                     foreach ($archivosGuardados as $a) {
                         $listaArchivos .= "<li>" . htmlspecialchars($a['nombre']) . "</li>";
-                        $mail->addAttachment($a['ruta'], $a['nombre']);
+                        // Solo adjuntar archivos que no sean imagen (las imágenes van en el PDF)
+                        $ext = strtolower(pathinfo($a['ruta'], PATHINFO_EXTENSION));
+                        if (!in_array($ext, ['jpg','jpeg','png','gif'])) {
+                            $mail->addAttachment($a['ruta'], $a['nombre']);
+                        }
                     }
                     $listaArchivos .= "</ul>";
+                    // Adjuntar solo el PDF generado con las imágenes
+                    if (isset($pdfFile) && file_exists($pdfFile)) {
+                        $mail->addAttachment($pdfFile, basename($pdfFile));
+                    }
 
                     $body = "
                             <p>Se ha adjuntado soporte final para la solicitud <strong>#$id_solicitud</strong>.</p>
                             <p><strong>Sucursal:</strong> " . htmlspecialchars($sucursal) . "</p>
                             <p><strong>Comentario:</strong><br>" . nl2br(htmlspecialchars($comentario)) . "</p>
-                            <p><strong>Archivos adjuntos:</strong>$listaArchivos</p>
                             <p><strong>El ticket ha sido marcado como <span style='color:red;'>CERRADO</span>.</strong></p>
                         ";
 
@@ -130,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $mail->addAddress($usuario['correo'], $usuario['nombre']);
                         }
                     }
-                    $mail->addAddress('ventas@justech.do', 'Copia Fija'); 
+                    $mail->addAddress('recepcion@justech.do', 'Copia Fija'); 
 
                     $mail->send();
 

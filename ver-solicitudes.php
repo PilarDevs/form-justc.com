@@ -117,6 +117,49 @@ try {
         font-size: 14px;
       }
     }
+
+    /* Pantalla de carga */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .loading-content {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #005792;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .btn-guardar:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
   </style>
 </head>
 
@@ -150,14 +193,91 @@ try {
           <td><?= htmlspecialchars($s['nombre']) ?></td>
           <td><?= date('d/m/Y', strtotime($s['fecha_envio'])) ?></td>
           <td><?= htmlspecialchars($s['sucursal'] ?? '-') ?></td>
+          <?php
+            // Calcular SLA temprano para poder usarlo al renderizar controles
+            $hoy = new DateTime();
+            $fechaEnvio = new DateTime($s['fecha_envio']);
+            $start = clone $fechaEnvio;
+            $start->modify('+1 day'); // El conteo inicia al día siguiente
+            // Si el inicio cae en sábado o domingo, mover al siguiente lunes
+            $dowStart = $start->format('N');
+            if ($dowStart == 6) { // sábado
+              $start->modify('next monday');
+            } else if ($dowStart == 7) { // domingo
+              $start->modify('next monday');
+            }
+
+            // Función para añadir días laborables (ignorando sábados y domingos)
+            $add_working_days = function(DateTime $dt, $days) {
+              $d = clone $dt;
+              $count = 0;
+              while ($count < $days) {
+                // contar día actual si es laborable
+                $dow = $d->format('N');
+                if ($dow != 6 && $dow != 7) {
+                  $count++;
+                  if ($count >= $days) break;
+                }
+                $d->modify('+1 day');
+              }
+              return $d;
+            };
+
+            // Deadline = start + 4 días laborables (incluyendo el día start si es laborable)
+            $limite = $add_working_days($start, 4);
+
+            // Determinar estado si ya fue cerrada usando fecha_cierre_original cuando exista
+            $fechaCierre = null;
+            if (!empty($s['fecha_cierre_original'])) {
+              $fechaCierre = new DateTime($s['fecha_cierre_original']);
+            }
+
+            if (($s['estatus'] === 'cerrado' || $s['estatus'] === 'completada') && $fechaCierre instanceof DateTime) {
+              if ($fechaCierre <= $limite) {
+                $sla = 'Cerrada con tiempo';
+              } else {
+                $sla = 'Cerrada fuera de tiempo';
+              }
+            } else {
+              // Calcular días laborables restantes desde hoy hasta limite
+              $dias_laborales = 0;
+              $temp = clone $hoy;
+              while ($temp <= $limite) {
+                $dia_semana = $temp->format('N'); // 1=lunes ... 7=domingo
+                if ($dia_semana != 6 && $dia_semana != 7) {
+                  $dias_laborales++;
+                }
+                $temp->modify('+1 day');
+              }
+              // restar el día de hoy si ya pasó parcialmente
+              if ($hoy > $start) {
+                // contar días laborables desde hoy hasta limite
+                $dias_restantes = 0;
+                $tmp2 = clone $hoy;
+                while ($tmp2 <= $limite) {
+                  $dow2 = $tmp2->format('N');
+                  if ($dow2 != 6 && $dow2 != 7) $dias_restantes++;
+                  $tmp2->modify('+1 day');
+                }
+                $dias_laborales = $dias_restantes;
+              }
+
+              if ($dias_laborales <= 0) {
+                $sla = 'Fuera de tiempo';
+              } else {
+                $sla = 'En tiempo - ' . $dias_laborales . ' días laborables';
+              }
+            }
+            $isCerradaConTiempo = (strpos($sla, 'Cerrada con tiempo') !== false);
+          ?>
           <td>
-            <select id="estatus-<?= $s['id'] ?>">
+            <select id="estatus-<?= $s['id'] ?>" <?= $isCerradaConTiempo ? 'disabled' : '' ?>>
               <option value="pendiente" <?= $s['estatus'] === 'pendiente' ? 'selected' : '' ?>>Pendiente</option>
-              <option value="completada" <?= $s['estatus'] === 'completada' || $s['estatus'] === 'cerrado' ? 'selected' : '' ?>>Completada</option>
+              <option value="completada" <?= $s['estatus'] === 'completada' || $s['estatus'] === 'cerrado' || $s['estatus'] === 'cerrada' ? 'selected' : '' ?>>Completada</option>
             </select>
           </td>
           <td>
-            <button class="btn-guardar" onclick="actualizarEstatus(<?= $s['id'] ?>)">Guardar</button>
+            <button class="btn-guardar" onclick="actualizarEstatus(<?= $s['id'] ?>)" <?= $isCerradaConTiempo ? 'disabled title="Solicitud cerrada dentro del SLA. No se puede cambiar."' : '' ?>>Guardar</button>
           </td>
           <td>
             <a class="btn-editar" href="editar-solicitud.php?id=<?= urlencode($s['id']) ?>">Editar</a>
@@ -183,46 +303,7 @@ try {
               <button class="btn-pdf" disabled>No disponible</button>
             <?php endif; ?>
           </td>
-          <?php
-            $hoy = new DateTime();
-            $emision = new DateTime($s['fecha_envio']);
-            $emision->modify('+1 day'); // El conteo inicia al día siguiente
-            $limite = clone $emision;
-            $limite->modify('+4 days'); // Sumamos 4 días para total de 4 días laborables
-            // Si la emisión es sábado (6) o domingo (7), empezar a contar desde el lunes siguiente
-            $dia_emision = $emision->format('N');
-            if ($dia_emision == 6) {
-              $emision->modify('next monday');
-              $limite = clone $emision;
-              $limite->modify('+4 days');
-            } else if ($dia_emision == 7) {
-              $emision->modify('next monday');
-              $limite = clone $emision;
-              $limite->modify('+3 days');
-            }
-            // Calcular días laborables (lunes a viernes, ignorando jueves y domingo)
-            $dias_laborales = 0;
-            $temp = clone $hoy;
-            while ($temp < $limite) {
-              $dia_semana = $temp->format('N'); // 1=lunes ... 7=domingo
-              if ($dia_semana != 4 && $dia_semana != 7) {
-                $dias_laborales++;
-              }
-              $temp->modify('+1 day');
-            }
-            $dias_restantes = $dias_laborales;
-            if (($s['estatus'] === 'cerrado' || $s['estatus'] === 'completada') && $hoy <= $limite) {
-              $sla = 'Cerrada con tiempo';
-            } else if ($dias_laborales <= 0 && ($s['estatus'] !== 'cerrado' && $s['estatus'] !== 'completada')) {
-              $sla = 'Fuera de tiempo';
-            } else if (($s['estatus'] !== 'cerrado' && $s['estatus'] !== 'completada') && $dias_laborales > 0) {
-              $sla = 'En tiempo - ' . $dias_laborales . ' días laborables';
-            } else if (($s['estatus'] === 'cerrado' || $s['estatus'] === 'completada') && $dias_laborales <= 0) {
-              $sla = 'Cerrada fuera de tiempo';
-            } else {
-              $sla = '';
-            }
-          ?>
+          
           <?php
             $slaColor = '';
             if (strpos($sla, 'En tiempo') !== false) {
@@ -244,6 +325,19 @@ try {
             <?php endif; ?>
           </td>
         </tr>
+      <?php endforeach; ?>
+    </tbody>
+  </table>
+
+  <!-- Pantalla de carga -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <p>Actualizando estado...</p>
+      <p style="font-size: 14px; color: #666;">Por favor, espere</p>
+    </div>
+  </div>
+
   <script>
   function reabrirSolicitud(id) {
     if(confirm('¿Seguro que deseas reabrir esta solicitud?')) {
@@ -259,12 +353,6 @@ try {
       });
     }
   }
-  </script>
-      <?php endforeach; ?>
-    </tbody>
-  </table>
-
-  <script>
     // Buscador en tiempo real por ID, usuario, fecha, estado, cerrado
     document.getElementById('buscador').addEventListener('input', function() {
       const filtro = this.value.toLowerCase();
@@ -306,7 +394,35 @@ try {
     });
 
     function actualizarEstatus(id) {
+      console.log('actualizarEstatus llamada para ID:', id);
+      
       const nuevoEstatus = document.getElementById(`estatus-${id}`).value;
+      // Buscar el botón por su posición en la misma fila
+      const selectElement = document.getElementById(`estatus-${id}`);
+      const fila = selectElement.closest('tr');
+      const boton = fila.querySelector('.btn-guardar');
+      const loadingOverlay = document.getElementById('loading-overlay');
+      
+      console.log('Elementos encontrados:', {
+        select: selectElement,
+        fila: fila,
+        boton: boton,
+        overlay: loadingOverlay
+      });
+      
+      // Verificar si el botón existe
+      if (!boton) {
+        console.error('No se encontró el botón para la solicitud', id);
+        return;
+      }
+      
+      // Mostrar pantalla de carga y deshabilitar botón
+      console.log('Mostrando pantalla de carga...');
+      loadingOverlay.style.display = 'flex';
+      boton.disabled = true;
+      const textoOriginal = boton.textContent;
+      boton.textContent = 'Procesando...';
+      
       fetch('actualizar-estatus.php', {
           method: 'POST',
           headers: {
@@ -316,9 +432,19 @@ try {
         })
         .then(res => res.text())
         .then(data => {
+          console.log('Respuesta recibida:', data);
+          // Ocultar pantalla de carga
+          loadingOverlay.style.display = 'none';
           alert(data.trim());
+          // Recargar la página para reflejar cambios
+          location.reload();
         })
         .catch(err => {
+          console.error('Error en fetch:', err);
+          // Ocultar pantalla de carga y restaurar botón
+          loadingOverlay.style.display = 'none';
+          boton.disabled = false;
+          boton.textContent = textoOriginal;
           alert("Error al actualizar estado");
           console.error(err);
         });

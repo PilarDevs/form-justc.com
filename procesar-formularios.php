@@ -88,8 +88,9 @@ $html = '
     margin-bottom: 10px;
   }
   .header img {
-    width: 100px;
-    height 100px;
+    width: 80px;
+    height: auto;
+    max-height: 60px;
     position: relative;
     left: 620px; 
     top: 10px;

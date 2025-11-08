@@ -6,6 +6,7 @@ $config = require 'protegido/configMail.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+use Dompdf\Dompdf;
 
 // Verificar que el usuario es admin
 if (!isset($_SESSION['id_usuario']) || $_SESSION['tipo'] !== 'admin') {
@@ -125,6 +126,157 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ':id_solicitud' => $id
     ]);
 
+    // Regenerar PDF con los datos actualizados
+
+    // Obtener datos actualizados para regenerar PDF
+    $stmtPDF = $pdo->prepare("
+        SELECT s.*, d.*, u.nombre as nombre_usuario
+        FROM solicitudes s 
+        LEFT JOIN detalles_solicitudes d ON s.id = d.id_solicitud 
+        LEFT JOIN usuarios u ON s.id_usuario = u.id
+        WHERE s.id = ?");
+    $stmtPDF->execute([$id]);
+    $datosSolicitud = $stmtPDF->fetch(PDO::FETCH_ASSOC);
+
+    if ($datosSolicitud) {
+        // Logo base64 para PDF (igual que el original)
+        $logoBase64 = base64_encode(file_get_contents(__DIR__ . '/img/Justech-text-logo.png'));
+        
+        // Convertir arrays desde la base de datos si es necesario
+        $materiales = !empty($datosSolicitud['materiales']) ? explode(',', $datosSolicitud['materiales']) : [];
+        $canalizacion = !empty($datosSolicitud['canalizacion']) ? explode(',', $datosSolicitud['canalizacion']) : [];
+        $equipos = !empty($datosSolicitud['equipos']) ? explode(',', $datosSolicitud['equipos']) : [];
+        $seguridad = !empty($datosSolicitud['seguridad']) ? explode(',', $datosSolicitud['seguridad']) : [];
+
+        // Generar HTML para el PDF con el mismo estilo que el original
+        $html = '
+        <style>
+          body { font-family: Arial, sans-serif; font-size: 13px; color: #333; }
+          .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+          }
+          .header img {
+            width: 80px;
+            height: auto;
+            max-height: 60px;
+            position: relative;
+            left: 620px; 
+            top: 10px;
+          }
+          .header .info {
+            text-align: center;
+            flex-grow: 1;
+            margin-left: 20px;
+          }
+          h1 { background: #005baa; color: #fff; font-size: 18px; padding: 8px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          td, th { padding: 8px; border: 1px solid #ccc; vertical-align: top; }
+          .label { background-color: #f0f0f0; font-weight: bold; width: 30%; }
+        </style>
+
+        <div class="header">
+          <img src="data:image/png;base64,' . $logoBase64 . '" alt="Logo" />
+          <div class="info">
+            <h2>Solicitud Técnica de Instalación o Reparación</h2>
+            <p><strong>Fecha:</strong> ' . date('d/m/Y H:i', strtotime($datosSolicitud['fecha_envio'])) . '<br>
+            <strong>No. ID:</strong> ' . $datosSolicitud['id'] . '</p>
+          </div>
+        </div>
+
+        <h1>Datos del solicitante</h1>
+        <table>
+          <tr><td class="label">Sucursal</td><td>' . htmlspecialchars($datosSolicitud['sucursal'] ?? '') . '</td></tr>
+          <tr><td class="label">Piso / Área</td><td>' . htmlspecialchars($datosSolicitud['piso'] ?? '') . '</td></tr>
+          <tr><td class="label">Persona contacto</td><td>' . htmlspecialchars($datosSolicitud['contacto'] ?? '') . '</td></tr>
+        </table>
+
+        <h1>Detalles del servicio</h1>
+        <table>';
+        
+        if (!empty($datosSolicitud['tipo_otro'])) {
+          $html .= '<tr><td class="label">Otro (descripción)</td><td>' . htmlspecialchars($datosSolicitud['tipo_otro']) . '</td></tr>';
+        }
+        if (!empty($datosSolicitud['cantidad_servicio'])) {
+          $html .= '<tr><td class="label">Cantidad de puntos requeridos</td><td>' . htmlspecialchars($datosSolicitud['cantidad_servicio']) . '</td></tr>';
+        }
+        if (!empty($datosSolicitud['puntos_instalar'])) {
+          $html .= '<tr><td class="label">Cantidad de puntos a instalar</td><td>' . htmlspecialchars($datosSolicitud['puntos_instalar']) . '</td></tr>';
+        }
+        if (!empty($datosSolicitud['puntos_reparar'])) {
+          $html .= '<tr><td class="label">Cantidad de puntos a reparar</td><td>' . htmlspecialchars($datosSolicitud['puntos_reparar']) . '</td></tr>';
+        }
+        
+        $html .= '</table>
+
+        <h1>Materiales requeridos</h1>
+        <table>
+          <tr><td class="label">Materiales</td><td>' . htmlspecialchars(implode(', ', $materiales)) . '</td></tr>';
+          
+        if (!empty($datosSolicitud['detalle_cable_utp'])) $html .= '<tr><td class="label">Cable UTP (m)</td><td>' . htmlspecialchars($datosSolicitud['detalle_cable_utp']) . '</td></tr>';
+        if (!empty($datosSolicitud['detalle_patch_cord'])) $html .= '<tr><td class="label">Patch cord</td><td>' . htmlspecialchars($datosSolicitud['detalle_patch_cord']) . '</td></tr>';
+        if (!empty($datosSolicitud['detalle_conector_rj45'])) $html .= '<tr><td class="label">Conectores RJ45</td><td>' . htmlspecialchars($datosSolicitud['detalle_conector_rj45']) . '</td></tr>';
+        if (!empty($datosSolicitud['detalle_jack'])) $html .= '<tr><td class="label">Jack RJ45</td><td>' . htmlspecialchars($datosSolicitud['detalle_jack']) . '</td></tr>';
+        if (!empty($datosSolicitud['detalle_patch_panel'])) $html .= '<tr><td class="label">Patch panel</td><td>' . htmlspecialchars($datosSolicitud['detalle_patch_panel']) . '</td></tr>';
+        if (!empty($datosSolicitud['faceplate_bocas'])) $html .= '<tr><td class="label">Faceplate (bocas)</td><td>' . htmlspecialchars($datosSolicitud['faceplate_bocas']) . '</td></tr>';
+        if (!empty($datosSolicitud['faceplate_cantidad'])) $html .= '<tr><td class="label">Cantidad de faceplates</td><td>' . htmlspecialchars($datosSolicitud['faceplate_cantidad']) . '</td></tr>';
+        
+        $html .= '</table>
+
+        <h1>Canalización y montaje</h1>
+        <table>
+          <tr><td class="label">Elementos</td><td>' . htmlspecialchars(implode(', ', $canalizacion)) . '</td></tr>';
+          
+        if (!empty($datosSolicitud['tamano_canaleta'])) $html .= '<tr><td class="label">Tamaño canaleta</td><td>' . htmlspecialchars($datosSolicitud['tamano_canaleta']) . '</td></tr>';
+        if (!empty($datosSolicitud['diametro_emt'])) $html .= '<tr><td class="label">Diámetro EMT</td><td>' . htmlspecialchars($datosSolicitud['diametro_emt']) . '</td></tr>';
+        if (!empty($datosSolicitud['cantidad_bandeja'])) $html .= '<tr><td class="label">Cantidad de bandejas</td><td>' . htmlspecialchars($datosSolicitud['cantidad_bandeja']) . '</td></tr>';
+        if (!empty($datosSolicitud['gabinete_tipo'])) $html .= '<tr><td class="label">Gabinete Tipo</td><td>' . htmlspecialchars($datosSolicitud['gabinete_tipo']) . '</td></tr>';
+        if (!empty($datosSolicitud['gabinete_tamano'])) $html .= '<tr><td class="label">Gabinete Tamaño</td><td>' . htmlspecialchars($datosSolicitud['gabinete_tamano']) . '</td></tr>';
+        
+        $html .= '</table>
+
+        <h1>Equipos activos</h1>
+        <table>
+          <tr><td class="label">Equipos</td><td>' . htmlspecialchars(implode(', ', $equipos)) . '</td></tr>';
+          
+        if (!empty($datosSolicitud['cantidad_pdu'])) $html .= '<tr><td class="label">Cantidad de PDU</td><td>' . htmlspecialchars($datosSolicitud['cantidad_pdu']) . '</td></tr>';
+        if (!empty($datosSolicitud['equipo_otro'])) $html .= '<tr><td class="label">Otros equipos</td><td>' . htmlspecialchars($datosSolicitud['equipo_otro']) . '</td></tr>';
+        
+        $html .= '</table>
+
+        <h1>Observaciones</h1>
+        <table>
+          <tr><td class="label">Comentario</td><td>' . htmlspecialchars($datosSolicitud['comentario'] ?? '') . '</td></tr>
+          <tr><td class="label">Prioridad</td><td>' . htmlspecialchars($datosSolicitud['prioridad'] ?? '') . '</td></tr>
+        </table>
+
+        <h1>Requisitos de seguridad</h1>
+        <table>
+          <tr><td class="label">Autorizaciones especiales</td><td>' . (!empty($seguridad) ? htmlspecialchars(implode(', ', $seguridad)) : 'No especificadas') . '</td></tr>
+        </table>
+        <label for="">Solicitado por: ' . htmlspecialchars($datosSolicitud['nombre_usuario'] ?? '') . '</label>';
+
+        // Generar nuevo PDF
+        $dompdf = new Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        // Crear nombre del PDF actualizado
+        $nombrePDF = 'solicitud_' . $id . '_actualizada_' . time() . '.pdf';
+        $pdfsDir = __DIR__ . '/pdfs/';
+        if (!is_dir($pdfsDir)) {
+            mkdir($pdfsDir, 0755, true);
+        }
+        $rutaPDF = $pdfsDir . $nombrePDF;
+        file_put_contents($rutaPDF, $dompdf->output());
+
+        // Actualizar la referencia del PDF en la base de datos
+        $stmtUpdatePDF = $pdo->prepare("UPDATE solicitudes SET url_pdf = ? WHERE id = ?");
+        $stmtUpdatePDF->execute([$nombrePDF, $id]);
+    }
 
     // 1. Obtener correo del solicitante de esta solicitud
     $stmtUsuario = $pdo->prepare("
@@ -215,6 +367,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: #f9f9f9;
             border-radius: 8px;
         }
+
+        /* Pantalla de carga */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        button:disabled {
+            background-color: #6c757d !important;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
     </style>
 </head>
 
@@ -222,7 +417,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="container">
         <h1>Editar detalles solicitud #<?= htmlspecialchars($id) ?></h1>
-        <form method="POST" action="">
+        <form method="POST" action="" id="edit-form">
             <label for="sucursal">Sucursal</label>
             <input type="text" id="sucursal" name="sucursal" value="<?= htmlspecialchars($solicitud['sucursal'] ?? '') ?>" required>
 
@@ -304,9 +499,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label for="seguridad">Seguridad (coma separados)</label>
             <input type="text" id="seguridad" name="seguridad" value="<?= htmlspecialchars($solicitud['seguridad'] ?? '') ?>">
 
-            <button type="submit">Guardar cambios</button>
+            <button type="submit" id="submit-btn">Guardar cambios</button>
         </form>
     </div>
+
+    <!-- Pantalla de carga -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Procesando cambios...</p>
+            <p style="font-size: 14px; color: #666;">Regenerando PDF y enviando notificaciones</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('edit-form').addEventListener('submit', function(e) {
+            // Mostrar pantalla de carga
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const submitBtn = document.getElementById('submit-btn');
+            
+            loadingOverlay.style.display = 'flex';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Procesando...';
+            
+            // El formulario se enviará normalmente después de esto
+        });
+    </script>
 
 </body>
 
